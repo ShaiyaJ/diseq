@@ -10,8 +10,8 @@ typedef enum {
 // =====----- DISEQ functions -----===== //
 
 // Setting up and tearing down the library
-void ds_init();                                     // Initialises library state - overrides ctrl-c
-void ds_deinit();                                   // Deinitialises library state - removes override for ctrl-c
+//void ds_init();                                     // Initialises library state
+//void ds_deinit();                                   // Deinitialises library state
 
 // Displaying to the terminal
 void ds_execute(char* string);                      // Displays a single string immediately to the terminal
@@ -40,31 +40,87 @@ DSKey ds_raw_input();                               // Returns a single characte
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include <string.h>
 
-void ds_init() {
-    // TODO: override signal
-}
 
-void ds_deinit() {
-    // TODO: un-override signal
-}
+// Library setup and teardown //
+
+//void ds_init() {}
+//void ds_deinit() {}
+
+
+
+// Immediate printing // 
 
 void ds_execute(char* string) {
-    printf("%s", string);
+    fputs(string, stdout);
 }
 
 void ds_executes(...) {
 }
 
+
+
+// Queuing printing //
+
+#ifndef DI_QUEUE_GROWTH_FACTOR
+#define DI_QUEUE_GROWTH_FACTOR 1.5
+#endif
+
+#ifndef DI_QUEUE_INIT_CAPACITY
+#define DI_QUEUE_INIT_CAPACITY 256
+#endif
+
 void ds_queue(char* string) {
     static char* queue = NULL;
+    static int size = 0;
+    static int capacity = 0;
+
+    // Special case for NULL
+    if (string == NULL) {
+        fputs(queue, stdout);
+
+        free(queue);
+        queue = NULL;
+
+        size = 0;
+        capacity = 0;
+    }
+    
+
+    // Reallocate memory if appending string takes more than capacity
+    int string_size = strlen(string);
+
+    if ( (size + string_size) >= capacity ) {
+        if (capacity == 0)
+            capacity = DI_QUEUE_INIT_CAPACITY;
+
+        char* new_queue = realloc(queue, capacity * DI_QUEUE_GROWTH_FACTOR);
+        
+        if (new_queue == NULL)
+            return;  // TODO: error value?
+
+        queue = new_queue;
+        capacity = capacity * DI_QUEUE_GROWTH_FACTOR;
+
+        ds_queue(string);   // Retry with new factor
+    }
+
+    // Concat string
+    strcat(queue, string);
+    size += string_size;
 }
 
 void ds_queues(...) {
 }
 
 void ds_display() {
+    ds_queue(NULL);
 }
+
+
+
+// Terminal info //
 
 void ds_get_cursor_pos(int* row, int* col) {
 }
@@ -72,6 +128,8 @@ void ds_get_cursor_pos(int* row, int* col) {
 void ds_get_terminal_size(int* rows, int* cols) {
 }
 
+
+// Terminal state and raw mode functions //
 
 // TODO: windows impl
 //#ifdef _WIN32

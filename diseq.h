@@ -85,6 +85,7 @@ void ds_queue(char* string) {
 
         size = 0;
         capacity = 0;
+        return;
     }
     
 
@@ -104,6 +105,7 @@ void ds_queue(char* string) {
         capacity = capacity * DI_QUEUE_GROWTH_FACTOR;
 
         ds_queue(string);   // Retry with new factor
+        return;
     }
 
     // Concat string

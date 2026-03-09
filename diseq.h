@@ -43,7 +43,30 @@ DSKey ds_raw_input();                               // Returns a single characte
 #include <string.h>
 
 
-// Library setup and teardown //
+// Library setup and teardown + utils //
+
+int asprintf(strp, fmt, ...) {  // malloc'd sprintf
+    va_list args;
+
+    // Get size
+    va_start(args, fmt);
+    int size = vnsprintf(NULL, fmt, args);
+    va_end(args)
+
+    // Error checking before allocation
+    if (size < 0)
+        return -1;
+
+    // Allocate memory
+    *string = malloc(size + 1);
+
+    // Error checking allocation
+    if (string == NULL)
+        return -1;
+
+    // Call sprintf
+    return vsprintf(*str, fmt, args);
+}
 
 //void ds_init() {}
 //void ds_deinit() {}

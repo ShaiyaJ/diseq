@@ -45,27 +45,28 @@ DSKey ds_raw_input();                               // Returns a single characte
 
 // Library setup and teardown + utils //
 
-int asprintf(strp, fmt, ...) {  // malloc'd sprintf
+// TODO: check safety
+int _w_asprintf(char* strp, const char* fmt, ...) {  // malloc'd sprintf
     va_list args;
 
     // Get size
     va_start(args, fmt);
-    int size = vnsprintf(NULL, fmt, args);
-    va_end(args)
+    int size = vsprintf(NULL, fmt, args);
+    va_end(args);
 
     // Error checking before allocation
     if (size < 0)
         return -1;
 
     // Allocate memory
-    *string = malloc(size + 1);
+    strp = malloc(size + 1);
 
     // Error checking allocation
-    if (string == NULL)
+    if (strp == NULL)
         return -1;
 
     // Call sprintf
-    return vsprintf(*str, fmt, args);
+    return vsprintf(strp, fmt, args);
 }
 
 //void ds_init() {}
@@ -79,7 +80,19 @@ void ds_execute(char* string) {
     fputs(string, stdout);
 }
 
-void ds_executes(...) {
+void ds_executes(char* fst, ..., char* end) {
+    va_list args;
+
+    va_start(fst);
+
+    char* current_arg;
+
+    do {
+        current_arg = va_arg(args, char*);
+        fputs(arg);
+    } while(arg != end); 
+
+    va_end(fst);
 }
 
 
@@ -136,7 +149,19 @@ void ds_queue(char* string) {
     size += string_size;
 }
 
-void ds_queues(...) {
+void ds_queues(char* fst, ..., char* end) {
+    va_list args;
+
+    va_start(fst);
+
+    char* current_arg;
+
+    do {
+        current_arg = va_arg(args, char*);
+        ds_queue(arg);
+    } while(arg != end); 
+
+    va_end(fst);
 }
 
 void ds_display() {

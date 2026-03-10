@@ -45,6 +45,7 @@ DSKey ds_raw_input();                               // Returns a single characte
 
 // Library setup and teardown + utils //
 
+/*
 // TODO: check safety
 int _w_asprintf(char* strp, const char* fmt, ...) {  // malloc'd sprintf
     va_list args;
@@ -72,6 +73,7 @@ int _w_asprintf(char* strp, const char* fmt, ...) {  // malloc'd sprintf
     error: 
         return -1;
 }
+*/
 
 //void ds_init() {}
 //void ds_deinit() {}

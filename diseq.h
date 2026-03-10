@@ -56,17 +56,21 @@ int _w_asprintf(char* strp, const char* fmt, ...) {  // malloc'd sprintf
 
     // Error checking before allocation
     if (size < 0)
-        return -1;
+        goto error;
 
     // Allocate memory
     strp = malloc(size + 1);
 
     // Error checking allocation
     if (strp == NULL)
-        return -1;
+        goto error;
 
     // Call sprintf
     return vsprintf(strp, fmt, args);
+    
+    // Error handling
+    error: 
+        return -1;
 }
 
 //void ds_init() {}
@@ -80,7 +84,7 @@ void ds_execute(char* string) {
     fputs(string, stdout);
 }
 
-#define ds_executes(...) do { ds_executes(__VA_ARGS__, NULL); } while(0)
+#define ds_executes(...) ds_executes(__VA_ARGS__, NULL)
 void ds_executes(char* fst, ...) {
     va_list args;
 
@@ -150,7 +154,7 @@ void ds_queue(char* string) {
     size += string_size;
 }
 
-#define ds_queues(...) do { ds_queues(__VA_ARGS__, NULL); } while(0)
+#define ds_queues(...) ds_queues(__VA_ARGS__, NULL)
 void ds_queues(char* fst, ...) {
     va_list args;
 

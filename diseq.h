@@ -80,7 +80,8 @@ void ds_execute(char* string) {
     fputs(string, stdout);
 }
 
-void ds_executes(char* fst, ..., char* end) {
+#define ds_executes(...) do { ds_executes(__VA_ARGS__, NULL); } while(0)
+void ds_executes(char* fst, ...) {
     va_list args;
 
     va_start(fst);
@@ -90,7 +91,7 @@ void ds_executes(char* fst, ..., char* end) {
     do {
         current_arg = va_arg(args, char*);
         fputs(arg);
-    } while(arg != end); 
+    } while(arg != NULL); 
 
     va_end(fst);
 }
@@ -149,7 +150,8 @@ void ds_queue(char* string) {
     size += string_size;
 }
 
-void ds_queues(char* fst, ..., char* end) {
+#define ds_queues(...) do { ds_queues(__VA_ARGS__, NULL); } while(0)
+void ds_queues(char* fst, ...) {
     va_list args;
 
     va_start(fst);
@@ -159,7 +161,7 @@ void ds_queues(char* fst, ..., char* end) {
     do {
         current_arg = va_arg(args, char*);
         ds_queue(arg);
-    } while(arg != end); 
+    } while(arg != NULL); 
 
     va_end(fst);
 }

@@ -15,10 +15,10 @@ typedef enum {
 
 // Displaying to the terminal
 void ds_execute(char* string);                      // Displays a single string immediately to the terminal
-void ds_executes(...);                              // Displays a set of strings immediately to the terminal
+void ds_executes(char* fst, ...);                   // Displays a set of strings immediately to the terminal
 
 void ds_queue(char* string);                        // Queues a single string into a buffer to be displayed later
-void ds_queues(...);                                // Queues a set of strings immediately to a buffer to be displayed later
+void ds_queues(char* fst, ...);                     // Queues a set of strings immediately to a buffer to be displayed later
 void ds_display();                                  // Flushes the buffer that ds_queue() and ds_queues() pushed into
 
 // Getting information about the terminal
@@ -84,20 +84,20 @@ void ds_execute(char* string) {
     fputs(string, stdout);
 }
 
-#define ds_executes(...) ds_executes(__VA_ARGS__, NULL)
-void ds_executes(char* fst, ...) {
+#define ds_executes(...) _ds_executes(__VA_ARGS__, NULL)
+void _ds_executes(char* fst, ...) {
     va_list args;
 
-    va_start(fst);
+    va_start(args, fst);
 
-    char* current_arg;
+    char* current_arg = fst;
 
     do {
+        fputs(current_arg, stdout);
         current_arg = va_arg(args, char*);
-        fputs(arg);
-    } while(arg != NULL); 
+    } while(current_arg != NULL); 
 
-    va_end(fst);
+    va_end(args);
 }
 
 
@@ -154,20 +154,20 @@ void ds_queue(char* string) {
     size += string_size;
 }
 
-#define ds_queues(...) ds_queues(__VA_ARGS__, NULL)
-void ds_queues(char* fst, ...) {
+#define ds_queues(...) _ds_queues(__VA_ARGS__, NULL)
+void _ds_queues(char* fst, ...) {
     va_list args;
 
-    va_start(fst);
+    va_start(args, fst);
 
-    char* current_arg;
+    char* current_arg = fst;
 
     do {
+        ds_queue(current_arg);
         current_arg = va_arg(args, char*);
-        ds_queue(arg);
-    } while(arg != NULL); 
+    } while(current_arg != NULL); 
 
-    va_end(fst);
+    va_end(args);
 }
 
 void ds_display() {

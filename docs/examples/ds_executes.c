@@ -2,10 +2,6 @@
 #include "../../diseq.h"
 
 int main(void) {
-    ds_queue("Hello, ");
-    ds_queue("world!");
-    ds_display();
-
+    ds_executes("Hello, ", "world", "!");
     return 0;
 }
-

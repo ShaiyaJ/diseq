@@ -6,6 +6,10 @@ typedef enum {
     NONE
 } DSKey;
 
+#define DI_ANSI_ESC "\033["
+
+#define DI_GET_CUR_POS DI_ANSI_ESC "6n"
+
 
 // =====----- DISEQ functions -----===== //
 
@@ -181,10 +185,29 @@ void ds_display() {
 // Terminal info //
 
 void ds_get_cursor_pos(int* row, int* col) {
+    fputs(DI_GET_CUR_POS, stdout);
+    
+    // Read escape output from stdin 
+    char* line = NULL;
+    size_t size = 0;
+
+    getdelim(&line, &size, 'R', stdin);
+    line[size] = '\0';
+
+    printf("\n\n%d\n\n%s\n\n", size, line);
+    exit(0);
+
+    // Get position info and store in out param
+    sscanf(line, "\033[%d;%dR", row, col);
+    free(line);
 }
 
 void ds_get_terminal_size(int* rows, int* cols) {
 }
+
+// TODO: implement?
+//void ds_get_mouse_pos(int* row, int* col) {
+//}
 
 
 // Terminal state and raw mode functions //

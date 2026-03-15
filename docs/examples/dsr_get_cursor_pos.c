@@ -11,5 +11,7 @@ int main(void) {
 
     printf("%d, %d", row, col);
 
+    ds_toggle_raw_mode();
+
     return 0;
 }

@@ -6,6 +6,13 @@ typedef enum {
     NONE
 } DSKey;
 
+typedef struct {
+    DSKey key;
+    bool ctrl;
+    bool alt;
+    bool shift;
+} DSKeyPress;
+
 #define DI_ANSI_ESC "\033["
 
 #define DI_QUERY_CUR_POS DI_ANSI_ESC "6n"
@@ -34,7 +41,7 @@ void dsr_get_terminal_size(int* rows, int* cols);   // Returns the current termi
 void ds_toggle_raw_mode();                          // Toggles the "raw mode" of the terminal
 
 // Getting input from the user
-DSKey ds_raw_input();                               // Returns a single character without blocking - can return nothing
+DSKeyPress dsr_raw_input();                           // Returns a single character without blocking - can return nothing
 
 
 
@@ -46,8 +53,14 @@ DSKey ds_raw_input();                               // Returns a single characte
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
-#include <termios.h>
-#include <unistd.h>
+
+#ifdef _WIN32
+    // TODO: windows impl
+#else 
+    #include <termios.h>
+    #include <unistd.h>
+    #include <ctype.h>
+#endif
 
 // #define's implementation //
 #undef DI_SET_CUR_POS
@@ -247,8 +260,29 @@ void dsr_get_terminal_size(int* rows, int* cols) {
             return; // TODO: error value?
     }
 
-    DSKey ds_raw_input() {
-        return NONE;
+    DSKeyPress dsr_raw_input() {
+        // Read first character
+        int fst = getchar();
+
+        if (fst == EOF) 
+            goto error;
+
+        // Switch case for control characters
+        DSKeyPress press = (DSKeyPress) {NONE, false, false, false};
+
+        switch (fst) {
+            default:
+                press.key = (DSKey) fst;
+                press.shift = isupper(fst);
+                
+                break;
+        }
+
+        // Return final press
+        return press;
+
+        error:
+            return (DSKeyPress) {NONE, false, false, false};
     }
 //#endif 
 

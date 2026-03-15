@@ -9,6 +9,7 @@ typedef enum {
 #define DI_ANSI_ESC "\033["
 
 #define DI_QUERY_CUR_POS DI_ANSI_ESC "6n"
+#define DI_SET_CUR_POS(r, c)                        // Implementation left to library author
 
 
 // =====----- DISEQ functions -----===== //
@@ -26,8 +27,8 @@ void ds_queues(char* fst, ...);                     // Queues a set of strings i
 void ds_display();                                  // Flushes the buffer that ds_queue() and ds_queues() pushed into
 
 // Getting information about the terminal
-void ds_get_cursor_pos(int* row, int* col);         // Returns the current cursor position
-void ds_get_terminal_size(int* rows, int* cols);    // Returns the current terminal size
+void dsr_get_cursor_pos(int* row, int* col);        // Returns the current cursor position (requires raw mode)
+void dsr_get_terminal_size(int* rows, int* cols);   // Returns the current terminal size (requires raw mode)
 
 // Manipulating terminal state
 void ds_toggle_raw_mode();                          // Toggles the "raw mode" of the terminal
@@ -45,43 +46,17 @@ DSKey ds_raw_input();                               // Returns a single characte
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
+#include <termios.h>
+#include <unistd.h>
 
+// #define's implementation //
+#undef DI_SET_CUR_POS
+#define DI_SET_CUR_POS(r, c)    printf(DI_ANSI_ESC "%d;%dH", r, c)
 
 // Library setup and teardown + utils //
 
-/*
-// TODO: check safety
-int _w_asprintf(char* strp, const char* fmt, ...) {  // malloc'd sprintf
-    va_list args;
-
-    // Get size
-    va_start(args, fmt);
-    int size = vsprintf(NULL, fmt, args);
-    va_end(args);
-
-    // Error checking before allocation
-    if (size < 0)
-        goto error;
-
-    // Allocate memory
-    strp = malloc(size + 1);
-
-    // Error checking allocation
-    if (strp == NULL)
-        goto error;
-
-    // Call sprintf
-    return vsprintf(strp, fmt, args);
-    
-    // Error handling
-    error: 
-        return -1;
-}
-*/
-
 //void ds_init() {}
 //void ds_deinit() {}
-
 
 
 // Immediate printing // 
@@ -120,12 +95,12 @@ void _ds_executes(char* fst, ...) {
 #endif
 
 void ds_queue(char* string) {
-    static char* queue = NULL;
+    static char* queue = NULL; 
     static int size = 0;
     static int capacity = 0;
 
     // Special case for NULL
-    if (string == NULL) {
+    if (string == NULL) {       // TODO: factor out instead of having a special case?
         fputs(queue, stdout);
 
         free(queue);
@@ -182,10 +157,9 @@ void ds_display() {
 }
 
 
+// Terminal state and raw mode functions //
 
-// Terminal info //
-
-void ds_get_cursor_pos(int* row, int* col) {
+void dsr_get_cursor_pos(int* row, int* col) {
     fputs(DI_QUERY_CUR_POS, stdout);
     
     // Read escape output from stdin 
@@ -203,15 +177,25 @@ void ds_get_cursor_pos(int* row, int* col) {
         return; // TODO: error value?
 }
 
-void ds_get_terminal_size(int* rows, int* cols) {
+void dsr_get_terminal_size(int* rows, int* cols) {
+    // Get the original position to restore after
+    int original_rpos = 0;
+    int original_cpos = 0;
+
+    dsr_get_cursor_pos(&original_rpos, &original_cpos);
+
+    // Set the cursor to 999, 999 and read the value
+    DI_SET_CUR_POS(999, 999);
+    dsr_get_cursor_pos(rows, cols);
+
+    // Restore the old position
+    DI_SET_CUR_POS(original_rpos, original_cpos);
 }
 
 // TODO: implement?
 //void ds_get_mouse_pos(int* row, int* col) {
 //}
 
-
-// Terminal state and raw mode functions //
 
 // TODO: windows impl
 //#ifdef _WIN32
@@ -223,31 +207,48 @@ void ds_get_terminal_size(int* rows, int* cols) {
 //    }
 //#else 
     void ds_toggle_raw_mode() {
-        static termios raw_term = {0};
-        static termios cooked_term = {0};
-        static bool is_raw = false;
+        static struct termios raw_term = {0};
+        static struct termios cooked_term = {0};
+
+        static bool is_cooked = false;
+        static bool terms_initialised = false;
 
         // Setting terminal defaults if this is the first time running the function
-        //TODO
+        if (!terms_initialised) {
+            // Setting cooked term
+            if (tcgetattr(STDIN_FILENO, &cooked_term) < 0)
+                goto error;   
+
+            // Setting raw term
+            raw_term = cooked_term;
+
+            raw_term.c_lflag &= ~(ICANON | ECHO);
+
+            raw_term.c_cc[VMIN] = 1;
+            raw_term.c_cc[VTIME] = 0;
+
+            // Setting flag
+            terms_initialised = true;
+        }
 
         // Toggling the terminal mode
-        if (is_raw)
+        fflush(stdout);
+
+        if (!is_cooked)
             if (tcsetattr(STDIN_FILENO, TCSANOW, &cooked_term) < 0)
                 goto error;
         else
             if (tcsetattr(STDIN_FILENO, TCSANOW, &raw_term) < 0)
                 goto error;
 
-        is_raw = !is_raw;
-
-        fflush(stdout);
+        is_cooked = !is_cooked;
 
         error:
             return; // TODO: error value?
-        
     }
 
     DSKey ds_raw_input() {
+        return NONE;
     }
 //#endif 
 

@@ -5,7 +5,9 @@
 int main(void) {
     int row = 0;
     int col = 0;
-    ds_get_cursor_pos(&row, &col);
+
+    ds_toggle_raw_mode();
+    dsr_get_cursor_pos(&row, &col);
 
     printf("%d, %d", row, col);
 

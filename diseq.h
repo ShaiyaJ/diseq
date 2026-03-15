@@ -8,7 +8,7 @@ typedef enum {
 
 #define DI_ANSI_ESC "\033["
 
-#define DI_GET_CUR_POS DI_ANSI_ESC "6n"
+#define DI_QUERY_CUR_POS DI_ANSI_ESC "6n"
 
 
 // =====----- DISEQ functions -----===== //
@@ -88,6 +88,7 @@ int _w_asprintf(char* strp, const char* fmt, ...) {  // malloc'd sprintf
 
 void ds_execute(char* string) {
     fputs(string, stdout);
+    fflush(stdout);
 }
 
 #define ds_executes(...) _ds_executes(__VA_ARGS__, NULL)
@@ -185,21 +186,21 @@ void ds_display() {
 // Terminal info //
 
 void ds_get_cursor_pos(int* row, int* col) {
-    fputs(DI_GET_CUR_POS, stdout);
+    fputs(DI_QUERY_CUR_POS, stdout);
     
     // Read escape output from stdin 
     char* line = NULL;
     size_t size = 0;
 
-    getdelim(&line, &size, 'R', stdin);
+    getdelim(&line, &size, 'R', stdin); // FIXME: blocking
     line[size] = '\0';
-
-    printf("\n\n%d\n\n%s\n\n", size, line);
-    exit(0);
 
     // Get position info and store in out param
     sscanf(line, "\033[%d;%dR", row, col);
     free(line);
+
+    error:
+        return; // TODO: error value?
 }
 
 void ds_get_terminal_size(int* rows, int* cols) {
@@ -222,7 +223,28 @@ void ds_get_terminal_size(int* rows, int* cols) {
 //    }
 //#else 
     void ds_toggle_raw_mode() {
+        static termios raw_term = {0};
+        static termios cooked_term = {0};
+        static bool is_raw = false;
 
+        // Setting terminal defaults if this is the first time running the function
+        //TODO
+
+        // Toggling the terminal mode
+        if (is_raw)
+            if (tcsetattr(STDIN_FILENO, TCSANOW, &cooked_term) < 0)
+                goto error;
+        else
+            if (tcsetattr(STDIN_FILENO, TCSANOW, &raw_term) < 0)
+                goto error;
+
+        is_raw = !is_raw;
+
+        fflush(stdout);
+
+        error:
+            return; // TODO: error value?
+        
     }
 
     DSKey ds_raw_input() {

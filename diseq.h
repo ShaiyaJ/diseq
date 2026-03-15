@@ -271,6 +271,7 @@ void dsr_get_terminal_size(int* rows, int* cols) {
         DSKeyPress press = (DSKeyPress) {NONE, false, false, false};
 
         switch (fst) {
+            // TODO
             default:
                 press.key = (DSKey) fst;
                 press.shift = isupper(fst);

@@ -20,6 +20,7 @@ typedef struct {
 
 
 // =====----- DISEQ functions -----===== //
+// TODO: split these docs up into lines and explain input params?
 
 // Setting up and tearing down the library
 //void ds_init();                                     // Initialises library state

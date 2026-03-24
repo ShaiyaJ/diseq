@@ -1,7 +1,13 @@
 #ifndef H_DISEQ
 #define H_DISEQ
 
-// =====----- DISEQ constants -----===== //
+// =====----- DISEQ util functions -----===== //
+
+// Utilities for locally-scoped (stack allocated) sprintf to allow automatic memory cleanup
+#define format(buf, fmt, ...)  sprintf(buf, fmt, __VA_ARGS__) ? buf : buf
+#define formatn(n, fmt, ...)   format( (char[n]){0}, fmt, __VA_ARGS__ )
+
+// =====----- DISEQ constants and types -----===== //
 typedef enum {
     SUCCESS,
     FAILURE
@@ -18,10 +24,93 @@ typedef struct {
     bool shift;
 } DSKeyPress;
 
-#define DI_ANSI_ESC "\033["
+// Useful ansi constants
+#define DI_ANSI_ESC         "\033["
+#define DI_RESET            DI_ANSI_ESC "0m"
 
-#define DI_QUERY_CUR_POS DI_ANSI_ESC "6n"
-#define DI_SET_CUR_POS(r, c)                        // Implementation left to library author
+// Cursor commands
+#define DI_QUERY_CUR_POS    DI_ANSI_ESC "6n"
+#define DI_SHOWCUR          DI_ANSI_ESC "?25l"
+#define DI_HIDECUR          DI_ANSI_ESC "?25h"
+
+//#define DI_SET_CUR_POS(r, c)        DI_ANSI_ESC #r ";" #c "H"
+#define DI_SET_CUR_POS(r, c)        formatn(10, DI_ANSI_ESC "%d;%dH", r, c)
+#define DI_MOVE_CUR_UP(n)           DI_ANSI_ESC #n "A"
+#define DI_MOVE_CUR_DOWN(n)         DI_ANSI_ESC #n "B"
+#define DI_MOVE_CUR_FORWARD(n)      DI_ANSI_ESC #n "C"
+#define DI_MOVE_CUR_BACKWARD(n)     DI_ANSI_ESC #n "D"
+#define DI_MOVE_CUR_NEXT_LINE(n)    DI_ANSI_ESC #n "E"
+#define DI_MOVE_CUR_PREV_LINE(n)    DI_ANSI_ESC #n "F"
+#define DI_MOVE_CUR_HORIZONTAL(n)   DI_ANSI_ESC #n "G"
+
+// Console commands
+#define SEQD_CLEAR                  DI_ANSI_ESC "2J"
+
+#define DI_SCROLL_UP(n)             DI_ANSI_ESC #n "S"
+#define DI_SCROLL_DOWN(n)           DI_ANSI_ESC #n "T"
+
+#define DI_ERASE_DISPLAY(n)         DI_ANSI_ESC #n "J"
+#define DI_ERASE_LINE(n)            DI_ANSI_ESC #n "K"
+// TODO: could have these in alphabetical order?
+
+// Text styles
+#define DI_BOLD                   DI_ANSI_ESC "1m"
+#define DI_FAINT                  DI_ANSI_ESC "2m"
+#define DI_ITALIC                 DI_ANSI_ESC "3m"
+#define DI_UNDERLINE              DI_ANSI_ESC "4m"
+#define DI_BLINK_SLOW             DI_ANSI_ESC "5m"
+#define DI_BLINK_FAST             DI_ANSI_ESC "6m"
+#define DI_REVERSE                DI_ANSI_ESC "7m"
+#define DI_CONCEAL                DI_ANSI_ESC "8m"
+#define DI_CROSSED_OUT            DI_ANSI_ESC "9m"
+
+#define DI_RESET_BOLD             DI_ANSI_ESC "22m"
+#define DI_RESET_ITALIC           DI_ANSI_ESC "23m"
+#define DI_RESET_UNDERLINE        DI_ANSI_ESC "24m"
+#define DI_RESET_BLINK            DI_ANSI_ESC "25m"
+#define DI_RESET_REVERSE          DI_ANSI_ESC "27m"
+#define DI_RESET_CONCEAL          DI_ANSI_ESC "28m"
+#define DI_RESET_CROSSED_OUT      DI_ANSI_ESC "29m"
+
+// Colour constants
+#define DI_FG_BLACK               DI_ANSI_ESC "30m"
+#define DI_FG_RED                 DI_ANSI_ESC "31m"
+#define DI_FG_GREEN               DI_ANSI_ESC "32m"
+#define DI_FG_YELLOW              DI_ANSI_ESC "33m"
+#define DI_FG_BLUE                DI_ANSI_ESC "34m"
+#define DI_FG_MAGENTA             DI_ANSI_ESC "35m"
+#define DI_FG_CYAN                DI_ANSI_ESC "36m"
+#define DI_FG_WHITE               DI_ANSI_ESC "37m"
+
+#define DI_FG_BRIGHT_BLACK        DI_ANSI_ESC "90m"
+#define DI_FG_BRIGHT_RED          DI_ANSI_ESC "91m"
+#define DI_FG_BRIGHT_GREEN        DI_ANSI_ESC "92m"
+#define DI_FG_BRIGHT_YELLOW       DI_ANSI_ESC "93m"
+#define DI_FG_BRIGHT_BLUE         DI_ANSI_ESC "94m"
+#define DI_FG_BRIGHT_MAGENTA      DI_ANSI_ESC "95m"
+#define DI_FG_BRIGHT_CYAN         DI_ANSI_ESC "96m"
+#define DI_FG_BRIGHT_WHITE        DI_ANSI_ESC "97m"
+
+#define DI_BG_BLACK               DI_ANSI_ESC "40m"
+#define DI_BG_RED                 DI_ANSI_ESC "41m"
+#define DI_BG_GREEN               DI_ANSI_ESC "42m"
+#define DI_BG_YELLOW              DI_ANSI_ESC "43m"
+#define DI_BG_BLUE                DI_ANSI_ESC "44m"
+#define DI_BG_MAGENTA             DI_ANSI_ESC "45m"
+#define DI_BG_CYAN                DI_ANSI_ESC "46m"
+#define DI_BG_WHITE               DI_ANSI_ESC "47m"
+
+#define DI_BG_BRIGHT_BLACK        DI_ANSI_ESC "100m"
+#define DI_BG_BRIGHT_RED          DI_ANSI_ESC "101m"
+#define DI_BG_BRIGHT_GREEN        DI_ANSI_ESC "102m"
+#define DI_BG_BRIGHT_YELLOW       DI_ANSI_ESC "103m"
+#define DI_BG_BRIGHT_BLUE         DI_ANSI_ESC "104m"
+#define DI_BG_BRIGHT_MAGENTA      DI_ANSI_ESC "105m"
+#define DI_BG_BRIGHT_CYAN         DI_ANSI_ESC "106m"
+#define DI_BG_BRIGHT_WHITE        DI_ANSI_ESC "107m"
+
+// Keys 
+// TODO
 
 
 // =====----- DISEQ functions -----===== //
@@ -87,10 +176,6 @@ DSKeyPress dsr_raw_input();             // Returns a single character without bl
     #include <ctype.h>
 #endif
 
-// #define's implementation //
-#undef DI_SET_CUR_POS
-#define DI_SET_CUR_POS(r, c)    printf(DI_ANSI_ESC "%d;%dH", r, c)
-
 // Library setup and teardown + utils //
 
 //void ds_init() {}
@@ -102,6 +187,7 @@ DSKeyPress dsr_raw_input();             // Returns a single character without bl
 void ds_execute(char* string) {
     fputs(string, stdout);
     fflush(stdout);
+    // TODO: free dynamically allocated string
 }
 
 #define ds_executes(...) _ds_executes(__VA_ARGS__, NULL)
@@ -207,18 +293,6 @@ DSResult dsr_get_cursor_pos(int* row, int* col) {
     fputs(DI_QUERY_CUR_POS, stdout);
     fflush(stdout);
 
-    /*
-    // Read escape output from stdin 
-    char* line = NULL;
-    size_t size = 0;
-
-    getdelim(&line, &size, 'R', stdin); 
-    line[size] = '\0';
-
-    // Get position info and store in out param
-    int s = sscanf(line, "\033[%d;%dR", row, col);
-    free(line);
-    */
     int s = scanf("\033[%d;%dR", row, col);
 
     // Error handling
@@ -241,7 +315,7 @@ DSResult dsr_get_terminal_size(int* rows, int* cols) {
         goto error;
 
     // Set the cursor to 999, 999 and read the value
-    DI_SET_CUR_POS(999, 999);
+    ds_execute(DI_SET_CUR_POS(999, 999));
     res = dsr_get_cursor_pos(rows, cols);
 
     // Error handling

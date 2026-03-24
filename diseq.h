@@ -4,8 +4,8 @@
 // =====----- DISEQ util functions -----===== //
 
 // Utilities for locally-scoped (stack allocated) sprintf to allow automatic memory cleanup
-#define format(buf, fmt, ...)  sprintf(buf, fmt, __VA_ARGS__) ? buf : buf
-#define formatn(n, fmt, ...)   format( (char[n]){0}, fmt, __VA_ARGS__ )
+#define di_format(buf, fmt, ...)  sprintf(buf, fmt, __VA_ARGS__) ? buf : buf
+#define di_formatn(n, fmt, ...)   di_format( (char[n]){0}, fmt, __VA_ARGS__ )
 
 // =====----- DISEQ constants and types -----===== //
 typedef enum {
@@ -34,7 +34,7 @@ typedef struct {
 #define DI_HIDECUR          DI_ANSI_ESC "?25h"
 
 //#define DI_SET_CUR_POS(r, c)        DI_ANSI_ESC #r ";" #c "H"
-#define DI_SET_CUR_POS(r, c)        formatn(10, DI_ANSI_ESC "%d;%dH", r, c)
+#define DI_SET_CUR_POS(r, c)        di_formatn(10, DI_ANSI_ESC "%d;%dH", r, c)
 #define DI_MOVE_CUR_UP(n)           DI_ANSI_ESC #n "A"
 #define DI_MOVE_CUR_DOWN(n)         DI_ANSI_ESC #n "B"
 #define DI_MOVE_CUR_FORWARD(n)      DI_ANSI_ESC #n "C"

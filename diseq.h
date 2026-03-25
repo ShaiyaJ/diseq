@@ -4,7 +4,8 @@
 // =====----- DISEQ util functions -----===== //
 
 // Utilities for locally-scoped (stack allocated) sprintf to allow automatic memory cleanup
-#define di_format(buf, fmt, ...)  sprintf(buf, fmt, __VA_ARGS__) ? buf : buf
+//#define di_format(buf, fmt, ...)  sprintf(buf, fmt, __VA_ARGS__) ? buf : buf
+#define di_format(buf, fmt, ...)  (sprintf(buf, fmt, __VA_ARGS__), buf)
 #define di_formatn(n, fmt, ...)   di_format( (char[n]){0}, fmt, __VA_ARGS__ )
 
 // =====----- DISEQ constants and types -----===== //

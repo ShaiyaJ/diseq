@@ -6,12 +6,15 @@ int main(void) {
     int row = 0;
     int col = 0;
 
-    ds_toggle_raw_mode();
+    if (ds_toggle_raw_mode() == FAILURE)
+        printf("Failed to set raw mode!\n");
+
     dsr_get_cursor_pos(&row, &col);
 
     printf("%d, %d", row, col);
 
-    ds_toggle_raw_mode();
+    if (ds_toggle_raw_mode() == FAILURE)
+        printf("Failed to set raw mode!\n");
 
     return 0;
 }

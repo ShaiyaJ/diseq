@@ -1,3 +1,11 @@
+/* 
+ * DISEQ - DIsplaySEQuences to the terminal
+ * A library for displaying ANSI escape sequences to the terminal. Allows the use of the terminal
+ * for graphical effects and applications. 
+ *
+ * Licensed under MIT - Shaiya J.
+ */
+
 #ifndef H_DISEQ
 #define H_DISEQ
 

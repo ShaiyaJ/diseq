@@ -4,8 +4,8 @@
 // =====----- DISEQ util functions -----===== //
 
 // Utilities for locally-scoped (stack allocated) sprintf to allow automatic memory cleanup
-#define di_format(buf, fmt, ...)            /* implementation left to library implementor */
-#define di_formatn(n, fmt, ...)             di_format((char[n]){0}, fmt, __VA_ARGS__ )
+#define ds_format(buf, fmt, ...)            /* implementation left to library implementor */
+#define ds_formatn(n, fmt, ...)             ds_format((char[n]){0}, fmt, __VA_ARGS__ )
 
 // =====----- DISEQ constants and types -----===== //
 typedef enum {
@@ -33,25 +33,32 @@ typedef struct {
 #define DS_SHOWCUR          DS_ANSI_ESC "?25l"
 #define DS_HIDECUR          DS_ANSI_ESC "?25h"
 
-//#define DS_SET_CUR_POS(r, c)        DS_ANSI_ESC #r ";" #c "H"
-#define DS_SET_CUR_POS(r, c)        di_formatn(10, DS_ANSI_ESC "%d;%dH", r, c)
-#define DS_MOVE_CUR_UP(n)           DS_ANSI_ESC #n "A"
-#define DS_MOVE_CUR_DOWN(n)         DS_ANSI_ESC #n "B"
-#define DS_MOVE_CUR_FORWARD(n)      DS_ANSI_ESC #n "C"
-#define DS_MOVE_CUR_BACKWARD(n)     DS_ANSI_ESC #n "D"
-#define DS_MOVE_CUR_NEXT_LINE(n)    DS_ANSI_ESC #n "E"
-#define DS_MOVE_CUR_PREV_LINE(n)    DS_ANSI_ESC #n "F"
-#define DS_MOVE_CUR_HORIZONTAL(n)   DS_ANSI_ESC #n "G"
+#define DS_SET_CUR_POS(r, c)        ds_formatn(10, DS_ANSI_ESC "%d;%dH", r, c) // TODO: make these more robust with a %3d? 
+#define DS_MOVE_CUR_UP(n)           ds_formatn(6, DS_ANSI_ESC "%dA", n)
+#define DS_MOVE_CUR_DOWN(n)         ds_formatn(6, DS_ANSI_ESC "%dB", n)
+#define DS_MOVE_CUR_FORWARD(n)      ds_formatn(6, DS_ANSI_ESC "%dC", n)
+#define DS_MOVE_CUR_BACKWARD(n)     ds_formatn(6, DS_ANSI_ESC "%dD", n)
+#define DS_MOVE_CUR_NEXT_LINE(n)    ds_formatn(6, DS_ANSI_ESC "%dE", n)
+#define DS_MOVE_CUR_PREV_LINE(n)    ds_formatn(6, DS_ANSI_ESC "%dF", n)
+#define DS_MOVE_CUR_HORIZONTAL(n)   ds_formatn(6, DS_ANSI_ESC "%dG", n)
 
 // Console commands
-#define DS_CLEAR                    DS_ANSI_ESC "2J"
+#define DS_SCROLL_UP(n)             ds_formatn(6, DS_ANSI_ESC "%dS", n)
+#define DS_SCROLL_DOWN(n)           ds_formatn(6, DS_ANSI_ESC "%dT", n)
 
-#define DS_SCROLL_UP(n)             DS_ANSI_ESC #n "S"
-#define DS_SCROLL_DOWN(n)           DS_ANSI_ESC #n "T"
+#define DS_CLEAR_TO_END             DS_ANSI_ESC "0J"
+#define DS_CLEAR_TO_START           DS_ANSI_ESC "1J"
+#define DS_CLEAR_ALL                DS_ANSI_ESC "2J"
 
-#define DS_ERASE_DISPLAY(n)         DS_ANSI_ESC #n "J"
-#define DS_ERASE_LINE(n)            DS_ANSI_ESC #n "K"
-// TODO: could have these in alphabetical order?
+#define DS_CLEAR_LINE_TO_END        DS_ANSI_ESC "0K"
+#define DS_CLEAR_LINE_TO_START      DS_ANSI_ESC "1K"
+#define DS_CLEAR_LINE_ALL           DS_ANSI_ESC "2K"
+
+#define DS_SAVE_CUR_POS             DS_ANSI_ESC "s"
+#define DS_RESTORE_CUR_POS          DS_ANSI_ESC "u"
+
+#define DS_ALT_SCREEN_BUFFER_ON     DS_ANSI_ESC "?1049h"
+#define DS_ALT_SCREEN_BUFFER_OFF    DS_ANSI_ESC "?1049l"
 
 // Text styles
 #define DS_BOLD                   DS_ANSI_ESC "1m"
@@ -109,9 +116,22 @@ typedef struct {
 #define DS_BG_BRIGHT_CYAN         DS_ANSI_ESC "106m"
 #define DS_BG_BRIGHT_WHITE        DS_ANSI_ESC "107m"
 
+#define DS_BG_256(n)              ds_formatn(11, DS_ANSI_ESC "48;5;%dm", n)
+#define DS_FG_256(n)              ds_formatn(11, DS_ANSI_ESC "38;5;%dm", n)
+
+#define DS_BG(r, g, b)            ds_formatn(19, DS_ANSI_ESC "48;2;%d;%d;%dm", r, g, b)
+#define DS_FG(r, g, b)            ds_formatn(19, DS_ANSI_ESC "38;2;%d;%d;%dm", r, g, b)
+
 // Keys 
 // TODO
 
+
+// =====----- DISEQ function defs -----===== //
+#ifdef DISEQ_STATIC
+#   define DISEQ_DEF static
+#else
+#   define DISEQ_DEF extern
+#endif
 
 // =====----- DISEQ functions -----===== //
 // Setting up and tearing down the library
@@ -119,44 +139,44 @@ typedef struct {
 //void ds_deinit();                                   // Deinitialises library state
 
 // Displaying to the terminal
-void ds_execute(                        // Displays a single string immediately to the terminal
-    char* string                        /* Input string */
+DISEQ_DEF void ds_execute(                // Displays a single string immediately to the terminal
+    char* string                          /* Input string */
 );
 
-void ds_executes(                       // Displays a set of strings immediately to the terminal
-    char* fst,                          /* First input string */
-    ...                                 /* Subsequent input string(s) */
+DISEQ_DEF void ds_executes(               // Displays a set of strings immediately to the terminal
+    char* fst,                            /* First input string */
+    ...                                   /* Subsequent input string(s) */
 );
 
 
-DSResult ds_queue(                      // Queues a single string into a buffer to be displayed later
-    char* string                        /* Input string */
+DISEQ_DEF DSResult ds_queue(              // Queues a single string into a buffer to be displayed later
+    char* string                          /* Input string */
 );
 
-DSResult ds_queues(                     // Queues a set of strings immediately to a buffer to be displayed later
-    char* fst,                          /* First input string */
-    ...                                 /* Subsequent input string(s) */
+DISEQ_DEF DSResult ds_queues(             // Queues a set of strings immediately to a buffer to be displayed later
+    char* fst,                            /* First input string */
+    ...                                   /* Subsequent input string(s) */
 );
 
-void ds_display();                      // Flushes the buffer that ds_queue() and ds_queues() pushed into
+DISEQ_DEF void ds_display();              // Flushes the buffer that ds_queue() and ds_queues() pushed into
 
 
 // Getting information about the terminal
-DSResult dsr_get_cursor_pos(            // Returns the current cursor position (requires raw mode)
-    int* row,                           /* Out parameter to the rows */
-    int* col                            /* Out parameter to the columns */
+DISEQ_DEF DSResult dsr_get_cursor_pos(    // Returns the current cursor position (requires raw mode)
+    int* row,                             /* Out parameter to the rows */
+    int* col                              /* Out parameter to the columns */
 );
 
-DSResult dsr_get_terminal_size(         // Returns the current terminal size (requires raw mode)
-    int* row,                           /* Out parameter to the rows */
-    int* col                            /* Out parameter to the columns */
+DISEQ_DEF DSResult dsr_get_terminal_size( // Returns the current terminal size (requires raw mode)
+    int* row,                             /* Out parameter to the rows */
+    int* col                              /* Out parameter to the columns */
 );
 
 // Manipulating terminal state
-DSResult ds_toggle_raw_mode();          // Toggles the "raw mode" of the terminal
+DISEQ_DEF DSResult ds_toggle_raw_mode();  // Toggles the "raw mode" of the terminal
 
 // Getting input from the user
-DSKeyPress dsr_raw_input();             // Returns a single character without blocking - can return nothing
+DISEQ_DEF DSKeyPress dsr_raw_input();     // Returns a single character without blocking - can return nothing
 
 
 // =====----- DISEQ libc impl -----===== //
@@ -178,9 +198,9 @@ DSKeyPress dsr_raw_input();             // Returns a single character without bl
 
 // Library setup and teardown + utils //
 
-#undef di_format
-#define di_format(buf, fmt, ...) _ds_format(buf, fmt, __VA_ARGS__)
-char* _ds_format(char* buf, const char* fmt, ...) {
+#undef ds_format
+#define ds_format(buf, fmt, ...) ds_format(buf, fmt, __VA_ARGS__)
+DISEQ_DEF char* (ds_format)(char* buf, const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
 
@@ -194,14 +214,13 @@ char* _ds_format(char* buf, const char* fmt, ...) {
 
 // Immediate printing // 
 
-void ds_execute(char* string) {
+DISEQ_DEF void ds_execute(char* string) {
     fputs(string, stdout);
     fflush(stdout);
-    // TODO: free dynamically allocated string
 }
 
-#define ds_executes(...) _ds_executes(__VA_ARGS__, NULL)
-void _ds_executes(char* fst, ...) {
+#define ds_executes(...) ds_executes(__VA_ARGS__, NULL)
+DISEQ_DEF void (ds_executes)(char* fst, ...) {
     va_list args;
 
     va_start(args, fst);
@@ -234,7 +253,7 @@ static struct {
     int capacity;
 } queue = {NULL, 0, 0};
 
-DSResult ds_queue(char* string) {
+DISEQ_DEF DSResult ds_queue(char* string) {
     // Reallocate memory if appending string takes more than capacity
     int string_size = strlen(string);
 
@@ -261,7 +280,7 @@ DSResult ds_queue(char* string) {
 }
 
 #define ds_queues(...) _ds_queues(__VA_ARGS__, NULL)
-DSResult _ds_queues(char* fst, ...) {
+DISEQ_DEF DSResult _ds_queues(char* fst, ...) {
     va_list args;
 
     va_start(args, fst);
@@ -284,7 +303,7 @@ DSResult _ds_queues(char* fst, ...) {
     return SUCCESS;
 }
 
-void ds_display() {
+DISEQ_DEF void ds_display() {
     fputs(queue.data, stdout);
 
     free(queue.data);
@@ -298,7 +317,7 @@ void ds_display() {
 
 // Terminal state and raw mode functions //
 
-DSResult dsr_get_cursor_pos(int* row, int* col) {
+DISEQ_DEF DSResult dsr_get_cursor_pos(int* row, int* col) {
     // Scan for position
     fputs(DS_QUERY_CUR_POS, stdout);
     fflush(stdout);
@@ -311,7 +330,7 @@ DSResult dsr_get_cursor_pos(int* row, int* col) {
     return SUCCESS;
 }
 
-DSResult dsr_get_terminal_size(int* rows, int* cols) {
+DISEQ_DEF DSResult dsr_get_terminal_size(int* rows, int* cols) {
     DSResult res;
 
     // Get the original position to restore after
@@ -355,7 +374,7 @@ DSResult dsr_get_terminal_size(int* rows, int* cols) {
 //    DSKey ds_raw_input() {
 //    }
 //#else 
-    DSResult ds_toggle_raw_mode() {
+    DISEQ_DEF DSResult ds_toggle_raw_mode() {
         static struct termios raw_term = {0};
         static struct termios cooked_term = {0};
 
@@ -399,7 +418,7 @@ DSResult dsr_get_terminal_size(int* rows, int* cols) {
             return FAILURE;
     }
 
-    DSKeyPress dsr_raw_input() {
+    DISEQ_DEF DSKeyPress dsr_raw_input() {
         // Read first character
         int fst = getchar();
 

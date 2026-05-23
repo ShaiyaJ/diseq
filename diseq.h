@@ -21,17 +21,6 @@ typedef enum {
     FAILURE
 } DSResult;
 
-typedef enum {
-    NONE
-} DSKey;
-
-typedef struct {
-    DSKey key;
-    bool ctrl;
-    bool alt;
-    bool shift;
-} DSKeyPress;
-
 // Useful ansi constants
 #define DS_ANSI_ESC         "\033["
 #define DS_RESET            DS_ANSI_ESC "0m"
@@ -130,9 +119,6 @@ typedef struct {
 #define DS_BG(r, g, b)            ds_formatn(19, DS_ANSI_ESC "48;2;%d;%d;%dm", r, g, b)
 #define DS_FG(r, g, b)            ds_formatn(19, DS_ANSI_ESC "38;2;%d;%d;%dm", r, g, b)
 
-// Keys 
-// TODO
-
 
 // =====----- DISEQ function defs -----===== //
 #ifdef DISEQ_STATIC
@@ -182,9 +168,6 @@ DISEQ_DEF DSResult dsr_get_terminal_size( // Returns the current terminal size (
 
 // Manipulating terminal state
 DISEQ_DEF DSResult ds_toggle_raw_mode();  // Toggles the "raw mode" of the terminal
-
-// Getting input from the user
-DISEQ_DEF DSKeyPress dsr_raw_input();     // Returns a single character without blocking - can return nothing
 
 
 // =====----- DISEQ libc impl -----===== //
@@ -378,9 +361,6 @@ DISEQ_DEF DSResult dsr_get_terminal_size(int* rows, int* cols) {
 //    void ds_toggle_raw_mode() {
 //
 //    }
-//
-//    DSKey ds_raw_input() {
-//    }
 //#else 
     DISEQ_DEF DSResult ds_toggle_raw_mode() {
         static struct termios raw_term = {0};
@@ -424,32 +404,6 @@ DISEQ_DEF DSResult dsr_get_terminal_size(int* rows, int* cols) {
 
         error:
             return FAILURE;
-    }
-
-    DISEQ_DEF DSKeyPress dsr_raw_input() {
-        // Read first character
-        int fst = getchar();
-
-        if (fst == EOF) 
-            goto error;
-
-        // Switch case for control characters
-        DSKeyPress press = (DSKeyPress) {NONE, false, false, false};
-
-        switch (fst) {
-            // TODO
-            default:
-                press.key = (DSKey) fst;
-                press.shift = isupper(fst);
-                
-                break;
-        }
-
-        // Return final press
-        return press;
-
-        error:
-            return (DSKeyPress) {NONE, false, false, false};
     }
 //#endif 
 

@@ -296,6 +296,7 @@ DISEQ_DEF DSResult _ds_queues(char* fst, ...) {
 
 DISEQ_DEF void ds_display() {
     fputs(queue.data, stdout);
+    fflush(stdout);
 
     free(queue.data);
     queue.data = NULL;

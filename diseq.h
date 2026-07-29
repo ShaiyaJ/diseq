@@ -187,6 +187,7 @@ DISEQ_DEF DSResult ds_toggle_raw_mode();  // Toggles the "raw mode" of the termi
 
 // Library setup and teardown + utils //
 
+#undef ds_format
 #define ds_format(buf, fmt, ...) (ds_format)(buf, fmt, __VA_ARGS__)
 DISEQ_DEF char* (ds_format)(char* buf, const char* fmt, ...) {
     va_list args;
@@ -267,8 +268,8 @@ DISEQ_DEF DSResult ds_queue(char* string) {
     return SUCCESS;
 }
 
-#define ds_queues(...) _ds_queues(__VA_ARGS__, NULL)
-DISEQ_DEF DSResult _ds_queues(char* fst, ...) {
+#define ds_queues(...) (ds_queues)(__VA_ARGS__, NULL)
+DISEQ_DEF DSResult (ds_queues)(char* fst, ...) {
     va_list args;
 
     va_start(args, fst);
@@ -312,10 +313,13 @@ DISEQ_DEF DSResult dsr_get_cursor_pos(int* row, int* col) {
     fflush(stdout);
 
     //int s = scanf("\033[%d;%dR", row, col);
+    char c;
+    int* target = row;
+
     while ( read(STDIN_FILENO, &c, 1) > 0 && c != 'R' ) {
-        if (c >= '0' || c <= '9') {
+        if (c >= '0' && c <= '9') {
             *target *= 10;
-           *target += c - '0';
+            *target += c - '0';
         }
 
         if (c == ';')
@@ -323,8 +327,10 @@ DISEQ_DEF DSResult dsr_get_cursor_pos(int* row, int* col) {
     }    
 
     // Error handling
+    /*
     if (s == EOF)
         return FAILURE;
+    */
     return SUCCESS;
 }
 

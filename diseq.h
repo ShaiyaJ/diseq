@@ -27,8 +27,8 @@ typedef enum {
 
 // Cursor commands
 #define DS_QUERY_CUR_POS    DS_ANSI_ESC "6n"
-#define DS_SHOWCUR          DS_ANSI_ESC "?25l"
-#define DS_HIDECUR          DS_ANSI_ESC "?25h"
+#define DS_SHOWCUR          DS_ANSI_ESC "?25h"
+#define DS_HIDECUR          DS_ANSI_ESC "?25l"
 
 #define DS_SET_CUR_POS(r, c)        ds_formatn(10, DS_ANSI_ESC "%d;%dH", r, c) // TODO: make these more robust with a %3d? 
 #define DS_MOVE_CUR_UP(n)           ds_formatn(6, DS_ANSI_ESC "%dA", n)

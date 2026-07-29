@@ -312,7 +312,15 @@ DISEQ_DEF DSResult dsr_get_cursor_pos(int* row, int* col) {
     fflush(stdout);
 
     //int s = scanf("\033[%d;%dR", row, col);
-    
+    while ( read(STDIN_FILENO, &c, 1) > 0 && c != 'R' ) {
+        if (c >= '0' || c <= '9') {
+            *target *= 10;
+           *target += c - '0';
+        }
+
+        if (c == ';')
+            target = col;
+    }    
 
     // Error handling
     if (s == EOF)

@@ -187,8 +187,7 @@ DISEQ_DEF DSResult ds_toggle_raw_mode();  // Toggles the "raw mode" of the termi
 
 // Library setup and teardown + utils //
 
-#undef ds_format
-#define ds_format(buf, fmt, ...) ds_format(buf, fmt, __VA_ARGS__)
+#define ds_format(buf, fmt, ...) (ds_format)(buf, fmt, __VA_ARGS__)
 DISEQ_DEF char* (ds_format)(char* buf, const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
@@ -208,7 +207,7 @@ DISEQ_DEF void ds_execute(char* string) {
     fflush(stdout);
 }
 
-#define ds_executes(...) ds_executes(__VA_ARGS__, NULL)
+#define ds_executes(...) (ds_executes)(__VA_ARGS__, NULL)
 DISEQ_DEF void (ds_executes)(char* fst, ...) {
     va_list args;
 
@@ -312,7 +311,8 @@ DISEQ_DEF DSResult dsr_get_cursor_pos(int* row, int* col) {
     fputs(DS_QUERY_CUR_POS, stdout);
     fflush(stdout);
 
-    int s = scanf("\033[%d;%dR", row, col);
+    //int s = scanf("\033[%d;%dR", row, col);
+    
 
     // Error handling
     if (s == EOF)
@@ -375,7 +375,8 @@ DISEQ_DEF DSResult dsr_get_terminal_size(int* rows, int* cols) {
                 goto error;   
 
             // Setting raw term
-            raw_term = cooked_term;
+            if (tcgetattr(STDIN_FILENO, &raw_term) < 0)
+                goto error;   
 
             raw_term.c_lflag &= ~(ICANON | ECHO);
 

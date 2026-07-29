@@ -250,7 +250,7 @@ DISEQ_DEF DSResult ds_queue(char* string) {
         if (queue.capacity == 0)
             queue.capacity = DI_QUEUE_INIT_CAPACITY;
 
-        char* new_queue = realloc(queue.data, queue.capacity * DI_QUEUE_GROWTH_FACTOR);
+        char* new_queue = (char*) realloc(queue.data, queue.capacity * DI_QUEUE_GROWTH_FACTOR);
         
         if (new_queue == NULL)
             return FAILURE; 
@@ -313,6 +313,9 @@ DISEQ_DEF DSResult dsr_get_cursor_pos(int* row, int* col) {
     fflush(stdout);
 
     //int s = scanf("\033[%d;%dR", row, col);
+    *row = 0;
+    *col = 0;
+
     char c;
     int* target = row;
 
